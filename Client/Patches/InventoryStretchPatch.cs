@@ -20,6 +20,13 @@ namespace UIScale.Client.Patches
     ///
     /// Fix: Pin LeftSide to the left at its original 1200px width.
     /// Make Stash Panel fill from after LeftSide to the right edge.
+    ///
+    /// LeftSide's own children ('Left Panel', 'Containers Panel') are
+    /// sized by a HorizontalLayoutGroup on LeftSide itself. That group
+    /// only recomputes child sizes on Unity's next internal layout pass,
+    /// which can land a frame or more after we resize LeftSide, leaving
+    /// the children visually stuck at their pre-resize width. Forcing an
+    /// immediate rebuild closes that gap.
     /// </summary>
     public class InventoryStretchPatch : ModulePatch
     {
@@ -64,6 +71,11 @@ namespace UIScale.Client.Patches
                     rt.offsetMin = new Vector2(12f, 130f);
                     rt.offsetMax = new Vector2(-702f, -48f);
 
+                    // Force LeftSide's HorizontalLayoutGroup to recompute its
+                    // children's widths now, instead of racing Unity's next
+                    // layout pass.
+                    LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
+
                     if (Plugin.DebugLog.Value)
                         Plugin.Log.LogInfo($"[UIScale] LeftSide: 12px left margin, expands to stash");
                 }
@@ -79,81 +91,6 @@ namespace UIScale.Client.Patches
                     if (Plugin.DebugLog.Value)
                         Plugin.Log.LogInfo($"[UIScale] Stash Panel: 680px anchored right");
                 }
-            }
-
-            // TEMP DIAGNOSTIC (4.1.2 port): confirmed LeftSide's own rect is
-            // being set and holds steady (doesn't get reset). But LeftSide
-            // now carries a HorizontalLayoutGroup it didn't have in 4.0.13 —
-            // that governs how its *children* are sized inside it, separate
-            // from LeftSide's own anchors. Dump the layout group's settings
-            // and each direct child's size/LayoutElement so we know whether
-            // (and which) children need to be told to expand.
-            if (Plugin.DebugLog.Value)
-            {
-                var leftSide = FindItemsPanelChild(root, "LeftSide");
-                var stashPanel = FindItemsPanelChild(root, "Stash Panel");
-
-                LogRect("LeftSide", leftSide);
-                LogRect("Stash Panel", stashPanel);
-                LogLayoutGroup(leftSide);
-                LogChildren(leftSide);
-            }
-        }
-
-        private static RectTransform? FindItemsPanelChild(Transform root, string name)
-        {
-            return root.GetComponentsInChildren<RectTransform>(true)
-                .FirstOrDefault(rt => rt.gameObject.name == name && IsItemsPanelChild(rt));
-        }
-
-        private static void LogRect(string label, RectTransform? rt)
-        {
-            if (rt == null)
-            {
-                Plugin.Log.LogInfo($"[UIScale] {label}: not found");
-                return;
-            }
-
-            Plugin.Log.LogInfo($"[UIScale] {label}: anchorMin={rt.anchorMin}, anchorMax={rt.anchorMax}, " +
-                                $"offsetMin={rt.offsetMin}, offsetMax={rt.offsetMax}, rect={rt.rect}");
-        }
-
-        private static void LogLayoutGroup(RectTransform? rt)
-        {
-            if (rt == null)
-                return;
-
-            var hlg = rt.GetComponent<HorizontalLayoutGroup>();
-            if (hlg == null)
-            {
-                Plugin.Log.LogInfo("[UIScale] LeftSide has no HorizontalLayoutGroup");
-                return;
-            }
-
-            Plugin.Log.LogInfo($"[UIScale] LeftSide HorizontalLayoutGroup: " +
-                                $"childControlWidth={hlg.childControlWidth}, childControlHeight={hlg.childControlHeight}, " +
-                                $"childForceExpandWidth={hlg.childForceExpandWidth}, childForceExpandHeight={hlg.childForceExpandHeight}, " +
-                                $"childScaleWidth={hlg.childScaleWidth}, spacing={hlg.spacing}, " +
-                                $"padding=(l:{hlg.padding.left},r:{hlg.padding.right},t:{hlg.padding.top},b:{hlg.padding.bottom})");
-        }
-
-        private static void LogChildren(RectTransform? rt)
-        {
-            if (rt == null)
-                return;
-
-            for (var i = 0; i < rt.childCount; i++)
-            {
-                if (rt.GetChild(i) is not RectTransform child)
-                    continue;
-
-                var le = child.GetComponent<LayoutElement>();
-                string leInfo = le == null
-                    ? "no LayoutElement"
-                    : $"LayoutElement(minW={le.minWidth}, prefW={le.preferredWidth}, flexW={le.flexibleWidth}, ignoreLayout={le.ignoreLayout})";
-
-                Plugin.Log.LogInfo($"[UIScale] LeftSide child[{i}] '{child.gameObject.name}': " +
-                                    $"active={child.gameObject.activeSelf}, rect={child.rect}, {leInfo}");
             }
         }
 
