@@ -79,6 +79,58 @@ namespace UIScale.Client.Patches
                         Plugin.Log.LogInfo($"[UIScale] Stash Panel: 680px anchored right");
                 }
             }
+
+            // TEMP DIAGNOSTIC (4.1.2 port): the values above were reported as
+            // not visually taking effect. Log component types on the target
+            // panels (a LayoutGroup/ContentSizeFitter would explain a silent
+            // override) and re-check the rects for a few frames to see if
+            // something resets them after we set them.
+            if (Plugin.DebugLog.Value)
+            {
+                var leftSide = FindItemsPanelChild(root, "LeftSide");
+                var stashPanel = FindItemsPanelChild(root, "Stash Panel");
+                var itemsPanel = leftSide != null ? leftSide.parent as RectTransform : null;
+
+                LogComponents("LeftSide", leftSide);
+                LogComponents("Stash Panel", stashPanel);
+                LogComponents("Items Panel", itemsPanel);
+                LogRect("LeftSide [frame +0]", leftSide);
+                LogRect("Stash Panel [frame +0]", stashPanel);
+
+                for (var frame = 0; frame < 10; frame++)
+                {
+                    yield return null;
+                    LogRect($"LeftSide [frame +{frame + 1}]", leftSide);
+                    LogRect($"Stash Panel [frame +{frame + 1}]", stashPanel);
+                }
+            }
+        }
+
+        private static RectTransform FindItemsPanelChild(Transform root, string name)
+        {
+            return root.GetComponentsInChildren<RectTransform>(true)
+                .FirstOrDefault(rt => rt.gameObject.name == name && IsItemsPanelChild(rt));
+        }
+
+        private static void LogComponents(string label, RectTransform? rt)
+        {
+            if (rt == null)
+            {
+                Plugin.Log.LogInfo($"[UIScale] {label}: not found");
+                return;
+            }
+
+            var components = rt.GetComponents<Component>().Select(c => c.GetType().Name);
+            Plugin.Log.LogInfo($"[UIScale] {label} components: {string.Join(", ", components)}");
+        }
+
+        private static void LogRect(string label, RectTransform? rt)
+        {
+            if (rt == null)
+                return;
+
+            Plugin.Log.LogInfo($"[UIScale] {label}: anchorMin={rt.anchorMin}, anchorMax={rt.anchorMax}, " +
+                                $"offsetMin={rt.offsetMin}, offsetMax={rt.offsetMax}, rect={rt.rect}");
         }
 
         /// <summary>
