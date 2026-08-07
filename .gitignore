@@ -1,0 +1,10 @@
+## .NET / MSBuild
+bin/
+obj/
+
+## Mod build output
+Client/release/
+
+## IDE
+.vs/
+*.user

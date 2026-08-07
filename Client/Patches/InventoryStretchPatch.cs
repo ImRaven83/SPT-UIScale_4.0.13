@@ -41,19 +41,11 @@ namespace UIScale.Client.Patches
         private static IEnumerator ApplyStretchDelayed(Transform root)
         {
             // Wait for method_4 coroutine to finish setting up panels
-            yield return null;
-            yield return null;
-            yield return null;
+            yield return PatchUtil.WaitFrames(3);
 
             // Stretch root InventoryScreen to fill canvas
-            var rootRt = root as RectTransform;
-            if (rootRt != null)
-            {
-                rootRt.anchorMin = Vector2.zero;
-                rootRt.anchorMax = Vector2.one;
-                rootRt.offsetMin = Vector2.zero;
-                rootRt.offsetMax = Vector2.zero;
-            }
+            if (root is RectTransform rootRt)
+                PatchUtil.StretchToFillParent(rootRt);
 
             // Find Items Panel → LeftSide and Stash Panel by walking hierarchy
             foreach (RectTransform rt in root.GetComponentsInChildren<RectTransform>(true))

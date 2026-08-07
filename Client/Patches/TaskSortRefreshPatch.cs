@@ -8,7 +8,9 @@ using UnityEngine;
 namespace UIScale.Client.Patches
 {
     /// <summary>
-    /// Keeps the task sort headers aligned with the task list, no more vodka for you!
+    /// Re-aligns the task sort headers after the list re-renders (e.g. when
+    /// the user changes the sort order), since TaskSortAlignmentPatch only
+    /// runs once on Show().
     /// </summary>
     public class TaskSortRefreshPatch : ModulePatch
     {
@@ -28,9 +30,9 @@ namespace UIScale.Client.Patches
 
         private static IEnumerator AlignAfterSortRefresh(Transform root)
         {
-            // Bcause initial fix broke when clicking lol
-            yield return null;
-            yield return null;
+            // Clicking a sort header rebuilds the list a couple frames later;
+            // wait for that before re-aligning, or the fix from Show() drifts.
+            yield return PatchUtil.WaitFrames(2);
             TaskSortAlignmentPatch.TryAlign(root);
         }
     }
