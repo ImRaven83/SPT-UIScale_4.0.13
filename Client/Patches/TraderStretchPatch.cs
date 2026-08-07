@@ -27,7 +27,7 @@ namespace UIScale.Client.Patches
                 "Show",
                 BindingFlags.Public | BindingFlags.Instance,
                 null,
-                new[] { typeof(TraderScreensGroup).GetNestedType("GClass3888") },
+                new[] { typeof(TraderScreensGroup).GetNestedType("TraderScreenController") },
                 null);
         }
 
