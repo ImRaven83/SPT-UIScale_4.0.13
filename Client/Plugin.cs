@@ -5,7 +5,7 @@ using UIScale.Client.Patches;
 
 namespace UIScale.Client
 {
-    [BepInPlugin("com.vonbraunz.uiscale", "UIScale", "1.0.0")]
+    [BepInPlugin("com.vonbraunz.uiscale", "UIScale", "1.1.0")]
     public class Plugin : BaseUnityPlugin
     {
         public static ConfigEntry<bool> Enabled = null!;
