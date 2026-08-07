@@ -5,6 +5,7 @@ using SPT.Reflection.Patching;
 using HarmonyLib;
 using EFT.UI;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace UIScale.Client.Patches
 {
@@ -19,6 +20,13 @@ namespace UIScale.Client.Patches
     ///
     /// Fix: Pin LeftSide to the left at its original 1200px width.
     /// Make Stash Panel fill from after LeftSide to the right edge.
+    ///
+    /// LeftSide's own children ('Left Panel', 'Containers Panel') are
+    /// sized by a HorizontalLayoutGroup on LeftSide itself. That group
+    /// only recomputes child sizes on Unity's next internal layout pass,
+    /// which can land a frame or more after we resize LeftSide, leaving
+    /// the children visually stuck at their pre-resize width. Forcing an
+    /// immediate rebuild closes that gap.
     /// </summary>
     public class InventoryStretchPatch : ModulePatch
     {
@@ -62,6 +70,11 @@ namespace UIScale.Client.Patches
                     rt.anchorMax = new Vector2(1f, 1f);
                     rt.offsetMin = new Vector2(12f, 130f);
                     rt.offsetMax = new Vector2(-702f, -48f);
+
+                    // Force LeftSide's HorizontalLayoutGroup to recompute its
+                    // children's widths now, instead of racing Unity's next
+                    // layout pass.
+                    LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
 
                     if (Plugin.DebugLog.Value)
                         Plugin.Log.LogInfo($"[UIScale] LeftSide: 12px left margin, expands to stash");

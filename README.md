@@ -1,6 +1,6 @@
 # SPT-UIScale
 
-BepInEx client plugin for SPT 4.0.13 that unlocks UI scaling for the inventory and trader screens. Overrides EFT's hardcoded 1080p canvas scaling with a configurable percentage, and adjusts panel layouts so the stash and gear panels properly fill the screen at higher resolutions.
+BepInEx client plugin for SPT 4.1.2 that unlocks UI scaling for the inventory and trader screens. Overrides EFT's hardcoded 1080p canvas scaling with a configurable percentage, and adjusts panel layouts so the stash and gear panels properly fill the screen at higher resolutions.
 
 ## Features
 
@@ -38,17 +38,17 @@ After first launch, edit `BepInEx/config/com.vonbraunz.uiscale.cfg`:
 
 ## How It Works
 
-EFT uses a central UI scale manager (`GClass3825`) that forces all canvases to a 1080p reference resolution via `ConstantPixelSize` scaling. Every frame it calculates `Min(screenWidth/1920, screenHeight/1080)` and applies that to all registered `CanvasScaler` components.
+EFT uses a central UI scale manager (`UICanvasScalerController`) that forces all canvases to a 1080p reference resolution via `ConstantPixelSize` scaling. It watches for resolution changes and calculates `Min(screenWidth/1920, screenHeight/1080)`, applying that to all registered `CanvasScaler` components.
 
 This mod patches that pipeline:
 
-1. **CanvasScalerPatch** — intercepts `GClass3825.smethod_2` and multiplies the game's auto-calculated scale factor by your configured percentage
+1. **CanvasScalerPatch** — intercepts `UICanvasScalerController.ChangeCanvasScalerRestriction` and multiplies the game's auto-calculated scale factor by your configured percentage
 2. **InventoryStretchPatch** — hooks `InventoryScreen.Show()` to reanchor the gear and stash panels so they fill the wider canvas
 3. **TraderStretchPatch** — hooks `TraderScreensGroup.Show()` to reanchor the trader items and stash panels
 
 ## Building
 
-Requires the SPT 4.0.13 client installed at `C:\SPT\ModTest\` (or override `TarkovDir` in the `.csproj`).
+Requires the SPT 4.1.2 client installed at `C:\SPT\ModTest\` (or override `TarkovDir` in the `.csproj`).
 
 ```
 dotnet build Client/UIScale.Client.csproj -c Release
@@ -58,6 +58,6 @@ Output: `Client/bin/Release/UIScale.Client.dll` and `Client/release/UIScale.zip`
 
 ## Compatibility
 
-- SPT 4.0.13
+- SPT 4.1.2
 - BepInEx 5.x
 - No server-side component required

@@ -16,7 +16,7 @@ namespace UIScale.Client.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(TasksPanel), "method_3");
+            return AccessTools.Method(typeof(TasksPanel), "Sort");
         }
 
         [PatchPostfix]
