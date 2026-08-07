@@ -8,6 +8,7 @@ BepInEx client plugin for SPT 4.0.13 that unlocks UI scaling for the inventory a
 - Automatically adjusts when changing resolution in-game
 - Inventory screen: gear panel expands to fill available space, stash anchored to the right
 - Trader screen: trader items anchored left, stash anchored right, deal panel centered
+- Tasks screen: sort headers track the rendered quest-list columns
 - Works with any resolution (1440p, 4K, ultrawide, etc.)
 
 ## Installation
@@ -24,6 +25,7 @@ After first launch, edit `BepInEx/config/com.vonbraunz.uiscale.cfg`:
 |---------|---------|-------------|
 | **Enabled** | `true` | Toggle the mod on/off without uninstalling |
 | **Scale Percent** | `100` | UI scale as a percentage of vanilla. `100` = no change, `75` = 75% size (more grid space), `50` = half size. Range: 50–150 |
+| **Align Sort Header** | `true` | Align Tasks screen sort headers with their rendered columns when UI scaling is active |
 | **Log Canvas Names** | `false` | Debug logging to BepInEx console |
 
 ### Recommended values
