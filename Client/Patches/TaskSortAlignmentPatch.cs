@@ -9,7 +9,9 @@ using UnityEngine;
 namespace UIScale.Client.Patches
 {
     /// <summary>
-    /// "We have alignment-after-clicking-sorting at home" she said
+    /// Aligns the Tasks screen sort header buttons to the columns rendered
+    /// by the first visible task row, since the header layout doesn't
+    /// track the scaled/stretched task-list columns on its own.
     /// </summary>
     public class TaskSortAlignmentPatch : ModulePatch
     {
@@ -37,7 +39,7 @@ namespace UIScale.Client.Patches
                     continue;
 
                 if (Plugin.DebugLog.Value)
-                    Plugin.Log.LogInfo("[UIScale] Aligned Tasks sort header to task-list columns with last few neurons");
+                    Plugin.Log.LogInfo("[UIScale] Aligned Tasks sort header to task-list columns");
 
                 yield break;
             }

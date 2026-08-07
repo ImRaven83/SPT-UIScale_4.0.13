@@ -42,20 +42,12 @@ namespace UIScale.Client.Patches
 
         private static IEnumerator ApplyStretchDelayed(Transform root)
         {
-            yield return null;
-            yield return null;
-            yield return null;
+            yield return PatchUtil.WaitFrames(3);
 
             // Stretch root TraderScreensGroup to fill canvas,
             // but leave top margin for the Tab Bar which extends 57px above the root.
-            var rootRt = root as RectTransform;
-            if (rootRt != null)
-            {
-                rootRt.anchorMin = Vector2.zero;
-                rootRt.anchorMax = Vector2.one;
-                rootRt.offsetMin = Vector2.zero;
-                rootRt.offsetMax = new Vector2(0f, -60f);
-            }
+            if (root is RectTransform rootRt)
+                PatchUtil.StretchToFillParent(rootRt, new Vector2(0f, -60f));
 
             foreach (RectTransform rt in root.GetComponentsInChildren<RectTransform>(true))
             {
