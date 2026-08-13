@@ -51,9 +51,26 @@ namespace UIScale.Client.Patches
             // Wait for method_4 coroutine to finish setting up panels
             yield return PatchUtil.WaitFrames(3);
 
+            // TEMP DIAGNOSTIC: the Insurance screen reuses this same Show()
+            // hook but reportedly clips LeftSide off the left edge -- likely
+            // because InventoryScreen isn't full-screen there. Log the root
+            // size before/after our stretch (and the real screen size) to
+            // confirm whether the container is narrower than expected.
+            if (Plugin.DebugLog.Value && root is RectTransform rootRtBefore)
+            {
+                Plugin.Log.LogInfo($"[UIScale] InventoryScreen.Show, " +
+                                    $"screen={Screen.width}x{Screen.height}, " +
+                                    $"root rect before stretch={rootRtBefore.rect}, " +
+                                    $"anchorMin={rootRtBefore.anchorMin}, anchorMax={rootRtBefore.anchorMax}, " +
+                                    $"parent={(root.parent != null ? root.parent.name : "(none)")}");
+            }
+
             // Stretch root InventoryScreen to fill canvas
             if (root is RectTransform rootRt)
                 PatchUtil.StretchToFillParent(rootRt);
+
+            if (Plugin.DebugLog.Value && root is RectTransform rootRtAfter)
+                Plugin.Log.LogInfo($"[UIScale] InventoryScreen root rect after stretch={rootRtAfter.rect}");
 
             // Find Items Panel → LeftSide and Stash Panel by walking hierarchy
             foreach (RectTransform rt in root.GetComponentsInChildren<RectTransform>(true))
@@ -77,7 +94,7 @@ namespace UIScale.Client.Patches
                     LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
 
                     if (Plugin.DebugLog.Value)
-                        Plugin.Log.LogInfo($"[UIScale] LeftSide: 12px left margin, expands to stash");
+                        Plugin.Log.LogInfo($"[UIScale] LeftSide: 12px left margin, expands to stash, rect={rt.rect}");
                 }
                 else if (name == "Stash Panel" && IsItemsPanelChild(rt))
                 {
@@ -89,7 +106,7 @@ namespace UIScale.Client.Patches
                     rt.offsetMax = new Vector2(-12f, -75f);
 
                     if (Plugin.DebugLog.Value)
-                        Plugin.Log.LogInfo($"[UIScale] Stash Panel: 680px anchored right");
+                        Plugin.Log.LogInfo($"[UIScale] Stash Panel: 680px anchored right, rect={rt.rect}");
                 }
             }
         }

@@ -45,7 +45,6 @@ namespace UIScale.Client
             new TaskSortAlignmentPatch().Enable();
             new TaskSortRefreshPatch().Enable();
             new HideoutStretchPatch().Enable();
-            new InsuranceStretchPatch().Enable();
 
             Logger.LogInfo("[UIScale] Client plugin loaded");
         }
