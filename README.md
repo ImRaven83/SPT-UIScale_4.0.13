@@ -1,13 +1,12 @@
 # SPT-UIScale
 
-BepInEx client plugin for SPT 4.1.2 that unlocks UI scaling for the inventory and trader screens. Overrides EFT's hardcoded 1080p canvas scaling with a configurable percentage, and adjusts panel layouts so the stash and gear panels properly fill the screen at higher resolutions.
+BepInEx client plugin for SPT 4.1.2 that unlocks UI scaling for EFT's screens. Overrides EFT's hardcoded 1080p canvas scaling with a configurable percentage, and can stretch supported screens edge-to-edge for ultrawide monitors.
 
 ## Features
 
 - Configurable UI scale as a percentage of vanilla (50–150%)
 - Automatically adjusts when changing resolution in-game
-- Inventory screen: gear panel expands to fill available space, stash anchored to the right
-- Trader screen: trader items anchored left, stash anchored right, deal panel centered
+- Optional **Anchor To Edge**: stretches supported screens (inventory, trader, hideout, flea market, etc.) edge-to-edge instead of leaving vanilla margins — built for ultrawide monitors
 - Tasks screen: sort headers track the rendered quest-list columns
 - Works with any resolution (1440p, 4K, ultrawide, etc.)
 
@@ -25,6 +24,7 @@ After first launch, edit `BepInEx/config/com.vonbraunz.uiscale.cfg`:
 |---------|---------|-------------|
 | **Enabled** | `true` | Toggle the mod on/off without uninstalling |
 | **Scale Percent** | `100` | UI scale as a percentage of vanilla. `100` = no change, `75` = 75% size (more grid space), `50` = half size. Range: 50–150 |
+| **Anchor To Edge** | `false` | Stretch supported screens edge-to-edge instead of leaving vanilla margins. Built for ultrawide monitors. Only resizes each screen's own background/root — does not reflow individual panels (gear grid, stash grid, etc.) within it. |
 | **Align Sort Header** | `true` | Align Tasks screen sort headers with their rendered columns when UI scaling is active |
 | **Log Canvas Names** | `false` | Debug logging to BepInEx console |
 
@@ -35,6 +35,7 @@ After first launch, edit `BepInEx/config/com.vonbraunz.uiscale.cfg`:
 | 1080p | 100 | No change (vanilla) |
 | 1440p | 75–85 | More inventory/stash space |
 | 4K | 50–75 | Significantly more grid space |
+| Ultrawide (21:9, 32:9) | 100 + Anchor To Edge on | Removes letterboxing on supported screens |
 
 ## How It Works
 
@@ -43,8 +44,7 @@ EFT uses a central UI scale manager (`UICanvasScalerController`) that forces all
 This mod patches that pipeline:
 
 1. **CanvasScalerPatch** — intercepts `UICanvasScalerController.ChangeCanvasScalerRestriction` and multiplies the game's auto-calculated scale factor by your configured percentage
-2. **InventoryStretchPatch** — hooks `InventoryScreen.Show()` to reanchor the gear and stash panels so they fill the wider canvas
-3. **TraderStretchPatch** — hooks `TraderScreensGroup.Show()` to reanchor the trader items and stash panels
+2. **AnchorToEdgePatch** — hooks the shared `UIScreen.ShowGameObject(bool)`, called by every screen type, and stretches the root RectTransform of an explicit allow-list of full-screen backgrounds (inventory, trader, hideout, flea market, etc.) to fill the canvas edge-to-edge when Anchor To Edge is on. It doesn't reflow the panels inside those screens — earlier versions tried per-panel pixel offsets, but those broke on every SPT update and conflicted with other UI-fixing mods, so this only touches each screen's own background.
 
 ## Building
 

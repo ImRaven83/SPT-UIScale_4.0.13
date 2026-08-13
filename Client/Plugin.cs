@@ -11,6 +11,7 @@ namespace UIScale.Client
         public static ConfigEntry<bool> Enabled = null!;
         public static ConfigEntry<int> ScalePercent = null!;
         public static ConfigEntry<bool> FixTaskSortHeader = null!;
+        public static ConfigEntry<bool> AnchorToEdge = null!;
         public static ConfigEntry<bool> DebugLog = null!;
         public static ManualLogSource Log = null!;
 
@@ -35,16 +36,20 @@ namespace UIScale.Client
                 "Task Screen", "Align Sort Header", true,
                 "Align the Tasks sort header to the rendered task-list columns when UI scaling is enabled.");
 
+            AnchorToEdge = Config.Bind(
+                "General", "Anchor To Edge", false,
+                "Stretch supported screens (inventory, trader, hideout, flea market, etc.) edge-to-edge " +
+                "instead of leaving vanilla margins. Built for ultrawide monitors. Only resizes each " +
+                "screen's own background/root -- does not reflow individual panels within it.");
+
             DebugLog = Config.Bind(
                 "Debug", "Log Canvas Names", false,
                 "Log canvas scaler info to BepInEx console.");
 
             new CanvasScalerPatch().Enable();
-            new InventoryStretchPatch().Enable();
-            new TraderStretchPatch().Enable();
+            new AnchorToEdgePatch().Enable();
             new TaskSortAlignmentPatch().Enable();
             new TaskSortRefreshPatch().Enable();
-            new HideoutStretchPatch().Enable();
 
             Logger.LogInfo("[UIScale] Client plugin loaded");
         }
