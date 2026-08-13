@@ -51,26 +51,9 @@ namespace UIScale.Client.Patches
             // Wait for method_4 coroutine to finish setting up panels
             yield return PatchUtil.WaitFrames(3);
 
-            // TEMP DIAGNOSTIC: the Insurance screen reuses this same Show()
-            // hook but reportedly clips LeftSide off the left edge -- likely
-            // because InventoryScreen isn't full-screen there. Log the root
-            // size before/after our stretch (and the real screen size) to
-            // confirm whether the container is narrower than expected.
-            if (Plugin.DebugLog.Value && root is RectTransform rootRtBefore)
-            {
-                Plugin.Log.LogInfo($"[UIScale] InventoryScreen.Show, " +
-                                    $"screen={Screen.width}x{Screen.height}, " +
-                                    $"root rect before stretch={rootRtBefore.rect}, " +
-                                    $"anchorMin={rootRtBefore.anchorMin}, anchorMax={rootRtBefore.anchorMax}, " +
-                                    $"parent={(root.parent != null ? root.parent.name : "(none)")}");
-            }
-
             // Stretch root InventoryScreen to fill canvas
             if (root is RectTransform rootRt)
                 PatchUtil.StretchToFillParent(rootRt);
-
-            if (Plugin.DebugLog.Value && root is RectTransform rootRtAfter)
-                Plugin.Log.LogInfo($"[UIScale] InventoryScreen root rect after stretch={rootRtAfter.rect}");
 
             // Find Items Panel → LeftSide and Stash Panel by walking hierarchy
             foreach (RectTransform rt in root.GetComponentsInChildren<RectTransform>(true))
@@ -94,7 +77,17 @@ namespace UIScale.Client.Patches
                     LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
 
                     if (Plugin.DebugLog.Value)
+                    {
                         Plugin.Log.LogInfo($"[UIScale] LeftSide: 12px left margin, expands to stash, rect={rt.rect}");
+
+                        // TEMP DIAGNOSTIC: LeftSide's own rect measures correctly
+                        // (confirmed), yet the Insurance screen still renders it
+                        // clipped. A Mask/RectMask2D on an ancestor, sized to the
+                        // pre-resize bounds, would explain that -- it clips
+                        // rendering independent of the child's own RectTransform.
+                        // Walk up from LeftSide and log any mask components found.
+                        LogAncestorMasks(rt);
+                    }
                 }
                 else if (name == "Stash Panel" && IsItemsPanelChild(rt))
                 {
@@ -108,6 +101,29 @@ namespace UIScale.Client.Patches
                     if (Plugin.DebugLog.Value)
                         Plugin.Log.LogInfo($"[UIScale] Stash Panel: 680px anchored right, rect={rt.rect}");
                 }
+            }
+        }
+
+        private static void LogAncestorMasks(RectTransform start)
+        {
+            var current = start.parent;
+            var depth = 0;
+
+            while (current != null && depth < 12)
+            {
+                if (current is RectTransform ancestorRt)
+                {
+                    var hasMask = ancestorRt.GetComponent<Mask>() != null;
+                    var hasRectMask2D = ancestorRt.GetComponent<RectMask2D>() != null;
+                    var flag = (hasMask || hasRectMask2D) ? " <-- HAS MASK" : "";
+
+                    Plugin.Log.LogInfo($"[UIScale]   ancestor[{depth}] '{ancestorRt.gameObject.name}': " +
+                                        $"Mask={hasMask}, RectMask2D={hasRectMask2D}, rect={ancestorRt.rect}, " +
+                                        $"anchorMin={ancestorRt.anchorMin}, anchorMax={ancestorRt.anchorMax}{flag}");
+                }
+
+                current = current.parent;
+                depth++;
             }
         }
 
